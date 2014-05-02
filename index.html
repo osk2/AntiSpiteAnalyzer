@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html" charset="utf-8" />
-	<title>跳針分析器</title>
+	<title>跳針留言分析</title>
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 	<style>
 		iframe {
@@ -28,6 +28,7 @@
 				<p>&nbsp;</p>
 				<div class="alert alert-info" id="loading_message">(((((((((((っ･ω･)っ 努力載入資料中…</div>
 				<div id="result">
+					<div class="alert alert-info">下列圖表分析了數位跳針榜名人堂的留言數量和時間<br/>圖表X軸為<strong>時間</strong>，Y軸為<strong>數量</strong>。</div>
 					<h2><a href="http://goo.gl/1tkGBL" target="_blank">Henry Chung</a> 留言時間分佈情況</h2>
 					<canvas id="chart_henry" width="600" height="400"></canvas>
 					<p>&nbsp;</p>
@@ -73,10 +74,10 @@ $(function(){
 
 		var target = $('#iframe_henry').contents().find('.table tr:odd'),
 			prev_post_date = new Date(),
-			result = new Uint8Array(24);//Initialize an array and fill zero.
+			result = new Uint8Array(24);//Initialize an array and fill with zero.
 
 		target.find('td:last').each(function(){
-			var post_hour = parseInt($(this).text().substr(11, 2));
+			var post_hour = parseInt($(this).text().substr(11, 2));//get hour
 			result[post_hour]++;
 		});
 		console.log(result);
@@ -121,7 +122,6 @@ $(function(){
 		};
 		new Chart(ctx).Bar(data);
 		$('#iframe_irene').remove();
-		$('#result').show();
 	});
 
 	$('#iframe_eddie').load(function() {
@@ -167,6 +167,7 @@ $(function(){
 		// };
 		// new Chart(ctx).Bar(data);
 		$('#iframe_eddie').remove();
+		$('#result').show();
 	});
 });//document ready
 </script>
