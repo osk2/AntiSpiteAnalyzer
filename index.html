@@ -12,9 +12,11 @@
 		#result {
 			display: none;
 		}
+
 		small {
 			color: gray;
 		}
+
 	</style>
 </head>
 <body>
@@ -26,149 +28,100 @@
 		<div class="row">
 			<div class="col-md-10 col-md-offset-1">
 				<p>&nbsp;</p>
-				<div class="alert alert-info" id="loading_message">(((((((((((っ･ω･)っ 努力載入資料中…</div>
+				<div class="alert alert-success" id="loading_message">(((((((((((っ･ω･)っ 努力載入資料中…</div>
 				<div id="result">
-					<div class="alert alert-info">下列圖表分析了數位跳針榜名人堂的留言數量和時間<br/>圖表X軸為<strong>時間</strong>，Y軸為<strong>數量</strong>。</div>
-					<h2><a href="http://goo.gl/1tkGBL" target="_blank">Henry Chung</a> 留言時間分佈情況</h2>
-					<canvas id="chart_henry" width="600" height="400"></canvas>
-					<p>&nbsp;</p>
-					<h2><a href="http://goo.gl/nSeuYd" target="_blank">Lee Irene</a> 留言時間分佈情況</h2>
-					<canvas id="chart_irene" width="600" height="400"></canvas>
-					<h2><a href="http://goo.gl/U7voTL" target="_blank">Eddie Chiu</a> 留言時間分佈情況</h2>
-					<canvas id="chart_eddie" width="600" height="400"></canvas>
-					<!-- <h2>合併分析</h2>
-					<canvas id="chart_total" width="600" height="400"></canvas> -->
-					<p>&nbsp;</p>
-					<p>
-						資料來源︰<a href="http://antispite.tonyq.org/" target="_blank">http://antispite.tonyq.org/</a><br/>
-						查詢日期︰<span id="query_datetime"></span>
-					</p>
-					<small>謹慎發文，信用至上</small>
-					<p>&nbsp;</p>
+					<div class="alert alert-info">下列圖表分析了跳針榜前十名的留言數量和時間<br/>圖表X軸為<strong>時間</strong>，Y軸為<strong>數量</strong>。</div>
 				</div>
+				<p>&nbsp;</p>
+				<p>
+					資料來源︰<a href="http://antispite.tonyq.org/" target="_blank">http://antispite.tonyq.org/</a><br/>
+					查詢日期︰<span id="query_datetime"></span>
+				</p>
+				<small>謹慎發文，信用至上</small>
+				<p>&nbsp;</p>
 			</div>
 		</div>
 	</div>
-<iframe src="proxy.php?url=http://goo.gl/1tkGBL&mode=native" id="iframe_henry"></iframe>
-<iframe src="proxy.php?url=http://goo.gl/nSeuYd&mode=native" id="iframe_irene"></iframe>
-<iframe src="proxy.php?url=http://goo.gl/U7voTL&mode=native" id="iframe_eddie"></iframe>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 <script src="Chart.min.js"></script>
 <script>
 $(function(){
+
+	Date.prototype.Format = function (fmt) {
+		var o = {
+			"M+": this.getMonth() + 1,
+			"d+": this.getDate(),
+			"h+": this.getHours(),
+			"m+": this.getMinutes(),
+			"s+": this.getSeconds(),
+			"q+": Math.floor((this.getMonth() + 3) / 3),
+			"S": this.getMilliseconds()
+		};
+		if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+		for (var k in o)
+		if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+		return fmt;
+	}//source: http://goo.gl/vYww9X
+
 	var result_henry,
 		result_irene,
 		result_eddie,
-		current_datetime = new Date().toLocaleString(),
+		current_datetime = new Date().Format("yyyy-MM-dd hh:mm:ss"),
 		time_label = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23"];
 
 	$('#query_datetime').html(current_datetime);
 
-	$('#iframe_henry').load(function() {
+	$.ajax({
+		url: 'http://antispite.tonyq.org:80/api/comment/rank',
+		dataType: 'json',
+		success: function(data) {
+			var count = 0;
+			$.each(data, function(ind, val) {
+				count++;
+				if (count <= 10) {
+					var result = new Uint8Array(24);
+					$.ajax({
+						url: 'http://antispite.tonyq.org:80/api/comment/user?userID='+val.userID,
+						dataType: 'json',
+						success: function(comments) {
+							$.each(comments, function(ind, val) {
+								var comment_timestamp = new Date(val.createDate);
+								result[comment_timestamp.getHours()]++;
+							});//each end
+							//var count = result.filter(function(value) { return value !== 0 }).length
+							var append_text = '<h2><a href="http://antispite.tonyq.org/comment/user/?key='+ val.userID +'" target="_blank">'+ val.name +'</a> 留言時間分佈情況</h2><canvas id="chart_'+ val.userID +'" width="770" height="400"></canvas>'
+							$('#result').append(append_text);
 
-		/*
-		把TonyQ大的反跳針排行榜載進來，加總所有發文時間
-		最後用chart.js畫出來
-		*/
-
-		var target = $('#iframe_henry').contents().find('.table tr:odd'),
-			prev_post_date = new Date(),
-			result = new Uint8Array(24);//Initialize an array and fill with zero.
-
-		target.find('td:last').each(function(){
-			var post_hour = parseInt($(this).text().substr(11, 2));//get hour
-			result[post_hour]++;
-		});
-		console.log(result);
-		result_henry = result;
-		var ctx = $("#chart_henry").get(0).getContext("2d"),
-			data = {
-			labels : time_label,
-			datasets : [
-				{
-					fillColor : "rgba(220,220,220,0.5)",
-					strokeColor : "rgba(220,220,220,1)",
-					data : result
+							var ctx = $('canvas:last').get(0).getContext('2d'),
+								data = {
+								labels : time_label,
+								datasets : [
+									{
+										fillColor : 'rgba(220,220,220,0.5)',
+										strokeColor : 'rgba(220,220,220,1)',
+										data : result
+									}
+								]
+							};
+							new Chart(ctx).Bar(data);
+						},
+						error: function() {
+							$('body').html('<h1 align="center">壞了，50收？</h1>');
+						}
+					});//ajax end
+				} else {
+					return false;
 				}
-			]
-		};
-		new Chart(ctx).Bar(data);
-		$('#iframe_henry').remove();
-	});
+			});//each end
+			$('#loading_message').hide(200);
+			$('#result').show(500);
+		},
+		error: function() {
+			$('body').html('<h1 align="center">壞了，50收？</h1>');
+		}
+	});//ajax end
 
-	$('#iframe_irene').load(function() {
-		$('#loading_message').hide(500);
-		var target = $('#iframe_irene').contents().find('.table tr:odd'),
-			prev_post_date = new Date(),
-			result = new Uint8Array(24);
-
-		target.find('td:last').each(function(){
-			var post_hour = parseInt($(this).text().substr(11, 2));
-			result[post_hour]++;
-		});
-		result_irene = result;
-		console.log(result);
-		var ctx = $("#chart_irene").get(0).getContext("2d"),
-			data = {
-			labels : time_label,
-			datasets : [
-				{
-					fillColor : "rgba(220,220,220,0.5)",
-					strokeColor : "rgba(220,220,220,1)",
-					data : result
-				}
-			]
-		};
-		new Chart(ctx).Bar(data);
-		$('#iframe_irene').remove();
-	});
-
-	$('#iframe_eddie').load(function() {
-		$('#loading_message').hide(500);
-		var target = $('#iframe_eddie').contents().find('.table tr:odd'),
-			prev_post_date = new Date(),
-			result = new Uint8Array(24);
-
-		target.find('td:last').each(function(){
-			var post_hour = parseInt($(this).text().substr(11, 2));
-			result[post_hour]++;
-		});
-		result_eddie = result;
-		console.log(result);
-		var ctx = $("#chart_eddie").get(0).getContext("2d"),
-			data = {
-			labels : time_label,
-			datasets : [
-				{
-					fillColor : "rgba(220,220,220,0.5)",
-					strokeColor : "rgba(220,220,220,1)",
-					data : result
-				}
-			]
-		};
-		new Chart(ctx).Bar(data);
-		// var ctx = $("#chart_total").get(0).getContext("2d"),
-		// 	data = {
-		// 	labels : time_label,
-		// 	datasets : [
-		// 		{
-		// 			fillColor : "rgba(220,220,220,0.5)",
-		// 			strokeColor : "rgba(220,220,220,1)",
-		// 			data : result_henry
-		// 		},
-		// 		{
-		// 			fillColor : "rgba(151,187,205,0.5)",
-		// 			strokeColor : "rgba(151,187,205,1)",
-		// 			data : result_irene
-		// 		}
-
-		// 	]
-		// };
-		// new Chart(ctx).Bar(data);
-		$('#iframe_eddie').remove();
-		$('#result').show(500);
-	});
 });//document ready
 </script>
 </body>
