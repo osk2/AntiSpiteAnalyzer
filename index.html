@@ -64,10 +64,7 @@ $(function(){
 		return fmt;
 	}//source: http://goo.gl/vYww9X
 
-	var result_henry,
-		result_irene,
-		result_eddie,
-		current_datetime = new Date().Format("yyyy-MM-dd hh:mm:ss"),
+	var 	current_datetime = new Date().Format("yyyy-MM-dd hh:mm:ss"),
 		time_label = ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23"];
 
 	$('#query_datetime').html(current_datetime);
@@ -89,7 +86,6 @@ $(function(){
 								var comment_timestamp = new Date(val.createDate);
 								result[comment_timestamp.getHours()]++;
 							});//each end
-							//var count = result.filter(function(value) { return value !== 0 }).length
 							var append_text = '<h2><a href="http://antispite.tonyq.org/comment/user/?key='+ val.userID +'" target="_blank">'+ val.name +'</a> 留言時間分佈情況</h2><canvas id="chart_'+ val.userID +'" width="770" height="400"></canvas>'
 							$('#result').append(append_text);
 
